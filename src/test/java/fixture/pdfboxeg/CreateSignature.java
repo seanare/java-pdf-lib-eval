@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.pdfbox.examples.signature;
+package fixture.pdfboxeg;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,11 +71,12 @@ public class CreateSignature extends CreateSignatureBase
      * Signs the given PDF file. Alters the original file on disk.
      * @param file the PDF file to sign
      * @throws IOException if the file could not be read or written
-     */
+     *
     public void signDetached(File file) throws IOException
     {
         signDetached(file, file, null);
     }
+    */
 
     /**
      * Signs the given PDF file.
@@ -83,9 +84,9 @@ public class CreateSignature extends CreateSignatureBase
      * @param outFile output PDF file
      * @throws IOException if the input file could not be read
      */
-    public void signDetached(File inFile, File outFile) throws IOException
+    public void signDetached(File inFile, File outFile, boolean certify) throws IOException
     {
-        signDetached(inFile, outFile, null);
+        signDetached(inFile, outFile, null, certify);
     }
 
     /**
@@ -95,7 +96,7 @@ public class CreateSignature extends CreateSignatureBase
      * @param tsaClient optional TSA client
      * @throws IOException if the input file could not be read
      */
-    public void signDetached(File inFile, File outFile, TSAClient tsaClient) throws IOException
+    public void signDetached(File inFile, File outFile, TSAClient tsaClient, boolean certify) throws IOException
     {
         if (inFile == null || !inFile.exists())
         {
@@ -107,11 +108,11 @@ public class CreateSignature extends CreateSignatureBase
         // sign
         try (PDDocument doc = PDDocument.load(inFile))
         {
-            signDetached(doc, fos, tsaClient);
+            signDetached(doc, fos, tsaClient, certify);
         }
     }
 
-    public void signDetached(PDDocument document, OutputStream output, TSAClient tsaClient)
+    public void signDetached(PDDocument document, OutputStream output, TSAClient tsaClient, boolean certify)
             throws IOException
     {
         setTsaClient(tsaClient);
@@ -135,14 +136,14 @@ public class CreateSignature extends CreateSignatureBase
         signature.setSignDate(Calendar.getInstance());
 
         // Optional: certify 
-        if (accessPermissions == 0)
+        if (certify && accessPermissions == 0)
         {
             setMDPPermission(document, signature, 2);
         }        
 
         if (isExternalSigning())
         {
-            System.out.println("Sign externally...");
+            //System.out.println("Sign externally...");
             document.addSignature(signature);
             ExternalSigningSupport externalSigning =
                     document.saveIncrementalForExternalSigning(output);
@@ -212,7 +213,7 @@ public class CreateSignature extends CreateSignatureBase
         String substring = name.substring(0, name.lastIndexOf('.'));
 
         File outFile = new File(inFile.getParent(), substring + "_signed.pdf");
-        signing.signDetached(inFile, outFile, tsaClient);
+        signing.signDetached(inFile, outFile, tsaClient, true);
     }
 
     private static void usage()
