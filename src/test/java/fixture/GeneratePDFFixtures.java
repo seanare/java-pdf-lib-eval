@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Collections;
 
+@Ignore
 public class GeneratePDFFixtures
 {
     @Test public void generateFixture_text_sigNitro11() throws IOException, GeneralSecurityException
