@@ -16,3 +16,6 @@ gradle-app.setting
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
+
+# Test output created by mkl's unit Test
+src/test/resources/test-outputs/

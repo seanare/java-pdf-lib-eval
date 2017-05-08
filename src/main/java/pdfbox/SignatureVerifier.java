@@ -113,12 +113,10 @@ public final class SignatureVerifier
                             case "adbe.pkcs7.sha1": // COSName.ADBE_PKCS7_SHA1
                             {
                                 // example: PDFBOX-1452.pdf
-                                COSString certString = (COSString) sigDict.getDictionaryObject(
-                                        COSName.CONTENTS);
-                                byte[] certData = certString.getBytes();
-                                CertificateFactory factory = CertificateFactory.getInstance("X.509");
-                                ByteArrayInputStream certStream = new ByteArrayInputStream(certData);
-                                Collection<? extends Certificate> certs = factory.generateCertificates(certStream);
+                                //COSString certString = (COSString) sigDict.getDictionaryObject(
+                                //        COSName.CONTENTS);
+                                byte[] certData = contents.getBytes();
+                                Collection<? extends Certificate> certs = getCertificates(certData);
                                 System.out.println("certs=" + certs);
                                 byte[] hash = MessageDigest.getInstance("SHA1").digest(buf);
                                 result.put(sig.getName(), verifyPKCS7(hash, contents, sig));
@@ -132,9 +130,7 @@ public final class SignatureVerifier
                                 COSString certString = (COSString) sigDict.getDictionaryObject(
                                         COSName.getPDFName("Cert"));
                                 byte[] certData = certString.getBytes();
-                                CertificateFactory factory = CertificateFactory.getInstance("X.509");
-                                ByteArrayInputStream certStream = new ByteArrayInputStream(certData);
-                                Collection<? extends Certificate> certs = factory.generateCertificates(certStream);
+                                Collection<? extends Certificate> certs = getCertificates(certData);
                                 System.out.println("certs=" + certs);
 
                                 //TODO verify signature
@@ -158,6 +154,12 @@ public final class SignatureVerifier
             }
 
         return result;
+    }
+
+    private Collection<? extends Certificate> getCertificates(byte[] certData) throws CertificateException {
+        CertificateFactory factory = CertificateFactory.getInstance("X.509");
+        ByteArrayInputStream certStream = new ByteArrayInputStream(certData);
+        return factory.generateCertificates(certStream);
     }
 
     /**

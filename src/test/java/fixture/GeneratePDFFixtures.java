@@ -77,6 +77,20 @@ public class GeneratePDFFixtures
         modifyPdf(testResources("sigField_sigAdobeDC.2.pdf"), testResources("sigField_sigAdobeDC_modified.3.pdf"), 3, "3. Modified with PDFBox");
     }
 
+    @Test public void generateFixture_sigFieldPkcs7Sha1_sigAdobeDC() throws IOException, GeneralSecurityException
+    {
+        generateSimplePdfWithOptionalSignatureFieldOptionalSig(testResources("sigFieldPkcs7Sha1_sigAdobeDC.1.pdf"), SignatureField.PKCS7_SHA1,
+                "PDF fixture",
+                "1. Simple PDF with signature field requesting adbe.pkcs7.sha1 SubFilter generated using PDFBox",
+                "2. Signed manually using Adobe Reader DC"
+        );
+    }
+
+    @Test public void generateFixture_sigFieldPkcs7Sha1_sigAdobeDC_modified() throws IOException, GeneralSecurityException, URISyntaxException
+    {
+        modifyPdf(testResources("sigFieldPkcs7Sha1_sigAdobeDC.2.pdf"), testResources("sigFieldPkcs7Sha1_sigAdobeDC_modified.3.pdf"), 3, "3. Modified with PDFBox");
+    }
+
     @Test public void generateFixture_sigFieldRsaSha1_sigAdobeDC() throws IOException, GeneralSecurityException
     {
         generateSimplePdfWithOptionalSignatureFieldOptionalSig(testResources("sigFieldRsaSha1_sigAdobeDC.1.pdf"), SignatureField.RSA_SHA1,
@@ -84,6 +98,11 @@ public class GeneratePDFFixtures
                 "1. Simple PDF with signature field requesting adbe.x509.rsa_sha1 SubFilter generated using PDFBox",
                 "2. Signed manually using Adobe Reader DC"
         );
+    }
+
+    @Test public void generateFixture_sigFieldRsaSha1_sigAdobeDC_modified() throws IOException, GeneralSecurityException, URISyntaxException
+    {
+        modifyPdf(testResources("sigFieldRsaSha1_sigAdobeDC.2.pdf"), testResources("sigFieldRsaSha1_sigAdobeDC_modified.3.pdf"), 3, "3. Modified with PDFBox");
     }
 
     @Test public void generateFixture_text_sigBCa() throws IOException, GeneralSecurityException
@@ -145,6 +164,7 @@ public class GeneratePDFFixtures
     {
         NONE(false),
         SIMPLE(true),
+        PKCS7_SHA1(true, COSName.ADBE_PKCS7_SHA1),
         RSA_SHA1(true, COSName.ADBE_X509_RSA_SHA1);
         //PKCS7_DETACHED(true, COSName.ADBE_PKCS7_DETACHED);
 

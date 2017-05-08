@@ -4,9 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 
 class SignatureVerificationData {
-    protected static final List<Object[]> pdfFixtures;
+    static final List<Object[]> pkcs7detachedPdfFixtures;
+    static final List<Object[]> rsaSha1PdfFixtures;
+    static final List<Object[]> pkcs7Sha1PdfFixtures;
     static {
-        pdfFixtures = Arrays.asList(
+        pkcs7detachedPdfFixtures = Arrays.asList(
             positiveCase("simple text PDF fixture signed by Nitro11 should validate", "text_sigNitro11.2.pdf"),
             positiveCase("signature field PDF fixture signed by Nitro11 should validate", "sigField_sigNitro11.2.pdf"),
             negativeCase("signature field PDF fixture signed by Nitro11 then modified should not validate", "sigField_sigNitro11_modified.3.pdf"),
@@ -19,10 +21,19 @@ class SignatureVerificationData {
             positiveCase("simple text PDF fixture certification signed by BouncyCastle should validate", "text_sigBCc.2.pdf"),
             positiveCase("signature field PDF fixture certification signed by BouncyCastle should validate", "sigField_sigBCc.2.pdf"),
             negativeCase("signature field PDF fixture certification signed by BouncyCastle then modified should not validate", "sigField_sigBCc_modified.3.pdf")
+        );
+
+        pkcs7Sha1PdfFixtures = Arrays.asList(
+            positiveCase("signature field PDF fixture signed by Adobe DC using pkcs7.sha1 should validate", "sigFieldPkcs7Sha1_sigAdobeDC.2.pdf"),
+            negativeCase("signature field PDF fixture signed by Adobe DC using pkcs7.sha1 then modified should not validate", "sigFieldPkcs7Sha1_sigAdobeDC_modified.3.pdf")
+        );
+
+        rsaSha1PdfFixtures = Arrays.asList(
             // Note that when creating this fixture, the following error was reported by Adobe:
             // Error storing signature property for the selected signature formatError storing signature property for the selected signature format
             // None the less Adobe Reader DC could subsequently open it and verify it
-            //positiveCase("signature field PDF fixture certification signed by Adobe DC using RSA_SHA1 should validate", "sigFieldRsaSha1_sigAdobeDC.2.pdf")
+            positiveCase("signature field PDF fixture signed by Adobe DC using RSA_SHA1 should validate", "sigFieldRsaSha1_sigAdobeDC.2.pdf"),
+            negativeCase("signature field PDF fixture signed by Adobe DC using RSA_SHA1 then modified should not validate", "sigFieldRsaSha1_sigAdobeDC_modified.3.pdf")
         );
     }
 
@@ -37,18 +48,18 @@ class SignatureVerificationData {
         this.valid = valid;
     }
 
-    private static Object[] positiveCase(String description, String fixtureFileInTestResources)
+    private static Object[] positiveCase(String description, String... fixturePathUnderTestResources)
     {
-        return new Object[]{ description, testPdfFile(fixtureFileInTestResources), true };
+        return new Object[]{ description, testPdfFile(fixturePathUnderTestResources), true };
     }
 
-    private static Object[] negativeCase(String description, String fixtureFileInTestResources)
+    private static Object[] negativeCase(String description, String... fixturePathUnderTestResources)
     {
-        return new Object[]{ description, testPdfFile(fixtureFileInTestResources), false };
+        return new Object[]{ description, testPdfFile(fixturePathUnderTestResources), false };
     }
 
-    private static File testPdfFile(String path, String... more)
+    private static File testPdfFile(String... fixturePathUnderTestResources)
     {
-        return Paths.get("src", "test", "resources").resolve(Paths.get(path, more)).toFile();
+        return Paths.get("src","test").resolve(Paths.get("resources", fixturePathUnderTestResources)).toFile();
     }
 }

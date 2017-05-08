@@ -1,3 +1,4 @@
+import com.google.common.collect.Iterables;
 import org.junit.Before;
 import org.junit.Test;
 import pdfbox.SignatureVerifier;
@@ -31,10 +32,10 @@ public class PdfBoxBouncyCastleSignatureVerifierTest extends SignatureVerificati
         assertThat(signatureVerifier.extractSignatures(pdfFixture), hasValue(valid ? verified() : failedToVerify()));
     }
 
-    @Parameterized.Parameters(name = "{index}: {0}")
+    @Parameterized.Parameters(name = "{index}: {0} : {1}")
     public static Iterable<Object[]> data()
     {
-        return pdfFixtures;
+        return Iterables.concat(pkcs7detachedPdfFixtures, pkcs7Sha1PdfFixtures);
     }
 
     public PdfBoxBouncyCastleSignatureVerifierTest(String description, File pdfFixture, boolean valid)
