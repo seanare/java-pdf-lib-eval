@@ -18,7 +18,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class PdfBoxBouncyCastleSignatureVerifierTest extends SignatureVerificationData
 {
-    private SignatureVerifier signatureVerifier;
+    protected SignatureVerifier signatureVerifier;
 
     @Before
     public void setUp() {
