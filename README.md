@@ -7,9 +7,9 @@ As a result several unit tests are not passing by design.
 
 The Nitro Pro 11 fixtures in this project are validated by Adobe Reader DC.
 
-Assuming you have Java installed, you can reproduce the issue thus:
+Assuming you have Java 8 installed, you can reproduce the issue thus:
 ```
-gradlew test --tests PdfBoxBouncyCastleSignatureVerifierTest
+./gradlew test --tests PdfBoxBouncyCastleSignatureVerifierTest
 ```
 For the Nitro 11 Pro signed fixtures, this results in the following error:
 ```
@@ -26,5 +26,12 @@ provider.addAlgorithm("Alg.Alias.MessageDigest.1.2.840.113549.1.1.5", "SHA-1");
 
 suppresses the exception, but the signatures fail to verify, as per this unit test:
 ```
-gradlew test --tests PdfBoxBouncyCastleAliasedProviderSignatureVerifierTest`
+./gradlew test --tests PdfBoxBouncyCastleAliasedProviderSignatureVerifierTest
+```
+
+mkl implemented a [validateSignaturesImproved()](https://github.com/mkl-public/testarea-pdfbox2/blob/master/src/test/java/mkl/testarea/pdfbox2/sign/ValidateSignature.java#L198) PDFBox and Bouncy Castle based PKCS#7 validation in response to
+[this StackOverflow question](http://stackoverflow.com/a/41174166).  It has some slight differences with respect to the treatment of adbe.pkcs7.detached signatures to the PDFBox example and outputs additional diagnostic information,
+as seen in this unit test:
+```
+./gradlew test --tests PdfBoxMklValidateSignatureTest
 ```

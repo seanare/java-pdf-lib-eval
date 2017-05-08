@@ -1,19 +1,21 @@
-package mkl.testarea.pdfbox2.sign;
+package pdfbox.mkl;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.Security;
+import java.security.Provider;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.util.ASN1Dump;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessableByteArray;
@@ -23,181 +25,23 @@ import org.bouncycastle.cms.SignerInformationVerifier;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import signature.SignatureResult;
 
 /**
  * @author mkl
  */
 public class ValidateSignature
 {
-    final static File RESULT_FOLDER = new File("target/test-outputs", "sign");
+    private final File resultFolder;
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception
+    public ValidateSignature(File resultFolder)
     {
-        Security.addProvider(new BouncyCastleProvider());
-        RESULT_FOLDER.mkdirs();
+        this.resultFolder = resultFolder;
     }
 
-    /**
-     * <a href="http://stackoverflow.com/questions/41116833/pdf-signature-validation">
-     * PDF Signature Validation
-     * </a>
-     * <br/>
-     * <a href="https://drive.google.com/file/d/0BzEmZ9pRWLhPOUJSYUdlRjg2eEU/view?usp=sharing">
-     * SignatureVlidationTest.pdf
-     * </a>
-     * <p>
-     * The code completely ignores the <b>SubFilter</b> of the signature.
-     * It is appropriate for signatures with <b>SubFilter</b> values
-     * <b>adbe.pkcs7.detached</b> and <b>ETSI.CAdES.detached</b>
-     * but will fail for signatures with <b>SubFilter</b> values
-     * <b>adbe.pkcs7.sha1</b> and <b>adbe.x509.rsa.sha1</b>.
-     * </p>
-     * <p>
-     * The example document has been signed with a signatures with
-     * <b>SubFilter</b> value <b>adbe.pkcs7.sha1</b>.
-     * </p>
-     */
-    @Test
-    public void testValidateSignatureVlidationTest() throws Exception
+    public Map<String, SignatureResult> validateSignaturesImproved(byte[] pdfByte, String signatureFileName) throws IOException, CMSException, OperatorCreationException, GeneralSecurityException
     {
-        System.out.println("\nValidate signature in SignatureVlidationTest.pdf; original code.");
-        byte[] pdfByte;
-        PDDocument pdfDoc = null;
-        SignerInformationVerifier verifier = null;
-        try
-        {
-            pdfByte = IOUtils.toByteArray(this.getClass().getResourceAsStream("SignatureVlidationTest.pdf"));
-            pdfDoc = PDDocument.load(new ByteArrayInputStream(pdfByte));
-            PDSignature signature = pdfDoc.getSignatureDictionaries().get(0);
-
-            byte[] signatureAsBytes = signature.getContents(pdfByte);
-            byte[] signedContentAsBytes = signature.getSignedContent(pdfByte);
-            CMSSignedData cms = new CMSSignedData(new CMSProcessableByteArray(signedContentAsBytes), signatureAsBytes);
-            SignerInformation signerInfo = (SignerInformation) cms.getSignerInfos().getSigners().iterator().next();
-            X509CertificateHolder cert = (X509CertificateHolder) cms.getCertificates().getMatches(signerInfo.getSID())
-                    .iterator().next();
-            verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(new BouncyCastleProvider()).build(cert);
-
-            // result if false
-            boolean verifyRt = signerInfo.verify(verifier);
-            System.out.println("Verify result: " + verifyRt);
-        }
-        finally
-        {
-            if (pdfDoc != null)
-            {
-                pdfDoc.close();
-            }
-        }
-    }
-
-    /**
-     * <a href="http://stackoverflow.com/questions/41116833/pdf-signature-validation">
-     * PDF Signature Validation
-     * </a>
-     * <br/>
-     * <a href="https://drive.google.com/file/d/0BzEmZ9pRWLhPOUJSYUdlRjg2eEU/view?usp=sharing">
-     * SignatureVlidationTest.pdf
-     * </a>
-     * <p>
-     * This code also ignores the <b>SubFilter</b> of the signature,
-     * it is appropriate for signatures with <b>SubFilter</b> value
-     * <b>adbe.pkcs7.sha1</b> which the example document has been
-     * signed with.
-     * </p>
-     */
-    @Test
-    public void testValidateSignatureVlidationTestAdbePkcs7Sha1() throws Exception
-    {
-        System.out.println("\nValidate signature in SignatureVlidationTest.pdf; special adbe.pkcs7.sha1 code.");
-        byte[] pdfByte;
-        PDDocument pdfDoc = null;
-        SignerInformationVerifier verifier = null;
-        try
-        {
-            pdfByte = IOUtils.toByteArray(this.getClass().getResourceAsStream("SignatureVlidationTest.pdf"));
-            pdfDoc = PDDocument.load(new ByteArrayInputStream(pdfByte));
-            PDSignature signature = pdfDoc.getSignatureDictionaries().get(0);
-
-            byte[] signatureAsBytes = signature.getContents(pdfByte);
-            CMSSignedData cms = new CMSSignedData(new ByteArrayInputStream(signatureAsBytes));
-            SignerInformation signerInfo = (SignerInformation) cms.getSignerInfos().getSigners().iterator().next();
-            X509CertificateHolder cert = (X509CertificateHolder) cms.getCertificates().getMatches(signerInfo.getSID())
-                    .iterator().next();
-            verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(new BouncyCastleProvider()).build(cert);
-
-            boolean verifyRt = signerInfo.verify(verifier);
-            System.out.println("Verify result: " + verifyRt);
-
-            byte[] signedContentAsBytes = signature.getSignedContent(pdfByte);
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] calculatedDigest = md.digest(signedContentAsBytes);
-            byte[] signedDigest = (byte[]) cms.getSignedContent().getContent();
-            System.out.println("Document digest equals: " + Arrays.equals(calculatedDigest, signedDigest));
-        }
-        finally
-        {
-            if (pdfDoc != null)
-            {
-                pdfDoc.close();
-            }
-        }
-    }
-
-    /**
-     * <a href="http://stackoverflow.com/questions/41116833/pdf-signature-validation">
-     * PDF Signature Validation
-     * </a>
-     * <br/>
-     * <a href="https://drive.google.com/file/d/0BzEmZ9pRWLhPOUJSYUdlRjg2eEU/view?usp=sharing">
-     * SignatureVlidationTest.pdf
-     * </a>
-     * <p>
-     * This code is <b>SubFilter</b>-aware.
-     * </p>
-     */
-    @Test
-    public void testValidateSignatureVlidationTestImproved() throws Exception
-    {
-        System.out.println("\nValidate signature in SignatureVlidationTest.pdf; dynamic code.");
-        try ( InputStream resource = getClass().getResourceAsStream("SignatureVlidationTest.pdf"))
-        {
-            Assert.assertTrue(validateSignaturesImproved(IOUtils.toByteArray(resource), "SignatureVlidationTest-%s.cms"));
-        }
-    }
-
-    /**
-     * <a href="http://stackoverflow.com/questions/41116833/pdf-signature-validation">
-     * PDF Signature Validation
-     * </a>
-     * <br/>
-     * <a href="https://drive.google.com/file/d/0BzEmZ9pRWLhPblJJWXNuY2tneHM/view?usp=sharing">
-     * pkcs7DetachedFailure.pdf
-     * </a>
-     * <p>
-     * The reason for this validation failing here while succeeding in Adobe Reader is that
-     * the signed attributes here are not properly DER encoded - the order in the set is wrong.
-     * Adobe Reader validates using the original, non-DER signed attributes representation
-     * while BouncyCastle here validates using a DER signed attributes representation.
-     * </p>
-     */
-    @Test
-    public void testValidatePkcs7DetachedFailureImproved() throws Exception
-    {
-        System.out.println("\nValidate signature in pkcs7DetachedFailure.pdf; dynamic code.");
-        try ( InputStream resource = getClass().getResourceAsStream("pkcs7DetachedFailure.pdf"))
-        {
-            Assert.assertTrue(validateSignaturesImproved(IOUtils.toByteArray(resource), "pkcs7DetachedFailure-%s.cms"));
-        }
-    }
-
-    boolean validateSignaturesImproved(byte[] pdfByte, String signatureFileName) throws IOException, CMSException, OperatorCreationException, GeneralSecurityException
-    {
-        boolean result = true;
+        Map<String, SignatureResult> result = new HashMap<>();
         try (PDDocument pdfDoc = PDDocument.load(pdfByte))
         {
             List<PDSignature> signatures = pdfDoc.getSignatureDictionaries();
@@ -205,16 +49,15 @@ public class ValidateSignature
             for (PDSignature signature : signatures)
             {
                 String subFilter = signature.getSubFilter();
+                // The PDFBox examples retrieve the contents using:
+                //   ((COSString)signature.getCOSObject().getDictionaryObject(COSName.CONTENTS)).getBytes()
+                // the mechanism below throws an "IOException: Invalid hex string" for the fixtures that were modified
+                // by PDF box.
                 byte[] signatureAsBytes = signature.getContents(pdfByte);
                 byte[] signedContentAsBytes = signature.getSignedContent(pdfByte);
                 System.out.printf("\nSignature # %s (%s)\n", ++index, subFilter);
 
-                if (signatureFileName != null)
-                {
-                    String fileName = String.format(signatureFileName, index);
-                    Files.write(new File(RESULT_FOLDER, fileName).toPath(), signatureAsBytes);
-                    System.out.printf("    Stored as '%s'.\n", fileName);
-                }
+                dump(signatureFileName, String.format(signatureFileName, index), "Signature contents", signatureAsBytes);
 
                 final CMSSignedData cms;
                 if ("adbe.pkcs7.detached".equals(subFilter) || "ETSI.CAdES.detached".equals(subFilter))
@@ -227,45 +70,42 @@ public class ValidateSignature
                 }
                 else if ("adbe.x509.rsa.sha1".equals(subFilter) || "ETSI.RFC3161".equals(subFilter))
                 {
-                    result = false;
-                    System.out.printf("!!! SubFilter %s not yet supported.\n", subFilter);
+                    String diag = String.format("!!! SubFilter %s not yet supported.", subFilter);
+                    System.out.println(diag);
+                    result.put(signature.getName(), SignatureResult.failed(diag));
                     continue;
                 }
                 else if (subFilter != null)
                 {
-                    result = false;
-                    System.out.printf("!!! Unknown SubFilter %s.\n", subFilter);
+                    String diag = String.format("!!! Unknown SubFilter %s.", subFilter);
+                    System.out.println(diag);
+                    result.put(signature.getName(), SignatureResult.failed(diag));
                     continue;
                 }
                 else
                 {
-                    result = false;
-                    System.out.println("!!! Missing SubFilter.");
+                    String diag = String.format("!!! Missing SubFilter.");
+                    System.out.println(diag);
+                    result.put(signature.getName(), SignatureResult.failed(diag));
                     continue;
                 }
 
                 SignerInformation signerInfo = (SignerInformation) cms.getSignerInfos().getSigners().iterator().next();
                 X509CertificateHolder cert = (X509CertificateHolder) cms.getCertificates().getMatches(signerInfo.getSID())
                         .iterator().next();
-                SignerInformationVerifier verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(new BouncyCastleProvider()).build(cert);
+                SignerInformationVerifier verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider()).build(cert);
 
                 boolean verifyResult = signerInfo.verify(verifier);
                 if (verifyResult)
                     System.out.println("    Signature verification successful.");
                 else
                 {
-                    result = false;
                     System.out.println("!!! Signature verification failed!");
-
-                    if (signatureFileName != null)
-                    {
-                        String fileName = String.format(signatureFileName + "-sigAttr.der", index);
-                        Files.write(new File(RESULT_FOLDER, fileName).toPath(), signerInfo.getEncodedSignedAttributes());
-                        System.out.printf("    Encoded signed attributes stored as '%s'.\n", fileName);
-                    }
-
+                    dump(signatureFileName, String.format(signatureFileName + "-sigAttr.der", index),
+                        "Encoded signed attributes", signerInfo.getEncodedSignedAttributes());
                 }
 
+                String diag = null;
                 if ("adbe.pkcs7.sha1".equals(subFilter))
                 {
                     MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -273,15 +113,44 @@ public class ValidateSignature
                     byte[] signedDigest = (byte[]) cms.getSignedContent().getContent();
                     boolean digestsMatch = Arrays.equals(calculatedDigest, signedDigest);
                     if (digestsMatch)
-                        System.out.println("    Document SHA1 digest matches.");
+                        System.out.println(diag = "    Document SHA1 digest matches.");
                     else
                     {
-                        result = false;
-                        System.out.println("!!! Document SHA1 digest does not match!");
+                        System.out.println(diag = "!!! Document SHA1 digest does not match!");
                     }
                 }
+                result.put(signature.getName(), new SignatureResult(cert, verifyResult, diag));
             }
         }
         return result;
     }
+
+    private void dump(String signatureFileNameBaseFormat, String signatureFileName, String description, byte[] data) throws IOException {
+        if (data == null) {
+            System.out.printf("    %s is null\n", description);
+            return;
+        }
+
+        if (signatureFileNameBaseFormat != null) {
+            Files.write(new File(resultFolder, signatureFileName).toPath(), data);
+            System.out.printf("    %s stored as '%s'.\n", description, signatureFileName);
+        }
+
+        System.out.printf("    ==================================================\n", description, signatureFileName);
+        System.out.printf("    %s\n", description);
+        try (ASN1InputStream bIn = new ASN1InputStream(data)) {
+            Object obj;
+            try {
+                while ((obj = bIn.readObject()) != null) {
+                    System.out.println(ASN1Dump.dumpAsString(obj, false));
+                }
+            } catch (IOException e) {
+                if (!e.getMessage().equals("unexpected end-of-contents marker")) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    protected Provider provider() { return new BouncyCastleProvider(); }
 }

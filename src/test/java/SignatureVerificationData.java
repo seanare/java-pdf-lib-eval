@@ -25,7 +25,9 @@ class SignatureVerificationData {
 
         pkcs7Sha1PdfFixtures = Arrays.asList(
             positiveCase("signature field PDF fixture signed by Adobe DC using pkcs7.sha1 should validate", "sigFieldPkcs7Sha1_sigAdobeDC.2.pdf"),
-            negativeCase("signature field PDF fixture signed by Adobe DC using pkcs7.sha1 then modified should not validate", "sigFieldPkcs7Sha1_sigAdobeDC_modified.3.pdf")
+            negativeCase("signature field PDF fixture signed by Adobe DC using pkcs7.sha1 then modified should not validate", "sigFieldPkcs7Sha1_sigAdobeDC_modified.3.pdf"),
+            // This fixture was retrieved from mkl's github repo supporting stackoverflow answers
+            positiveCase("adbe.pkcs7.sha1 PDF fixture should validate", "mkl", "SignatureVlidationTest_adbe_pkcs7_sha1.pdf")
         );
 
         rsaSha1PdfFixtures = Arrays.asList(
